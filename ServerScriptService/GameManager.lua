@@ -8,6 +8,7 @@ local ObjectsFolder = ServerScriptService:WaitForChild("Objects")
 local GameManager = {}
 GameManager.__index = GameManager
 
+local DataManager = require(ServerScriptService.DataManager)
 local Grid = require(ServerScriptService.Grid)
 
 local OBJECTS = {}
@@ -20,11 +21,13 @@ end
 GameManager.tileSize = 4
 GameManager.gridSizeX = 20
 GameManager.gridSizeY = 20
-GameManager.Owner = nil
+GameManager.player = nil
 
-function GameManager.new()
+function GameManager.new(player)
 	local self = setmetatable({}, GameManager)
-	self.grid = Grid.new(GameManager.gridSizeX, GameManager.gridSizeY)
+	self.player = player
+	self.grid = Grid.new(player, GameManager.gridSizeX, GameManager.gridSizeY)
+	self.data = DataManager.new(player)
 	self:setupRemoteEventHandling()
 	return self
 end
