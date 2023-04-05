@@ -44,8 +44,27 @@ function Grid:canPlaceObject(object, x, y)
 	return true
 end
 
-function Grid.new(sizeX, sizeY)
+function Grid:canPlaceObjectWithoutInstance(width, height, x, y)
+	-- Check if the object placement is valid without creating a new object instance
+	if x < 1 or x + width - 1 > self.sizeX or y < 1 or y + height - 1 > self.sizeY then
+		return false
+	end
+
+	-- Check if the object overlaps with any existing objects
+	for i = x, x + width - 1 do
+		for j = y, y + height - 1 do
+			if self.grid[i][j] ~= nil then
+				return false
+			end
+		end
+	end
+
+	return true
+end
+
+function Grid.new(player, sizeX, sizeY)
 	local self = setmetatable({}, Grid)
+	self.player = player
 	self.sizeX = sizeX
 	self.sizeY = sizeY
 	self.tileSize = 4

@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local PlaceObjectRequest = RemoteEvents:WaitForChild("PlaceObjectRequest")
+local CheckPlacementValid = RemoteEvents:WaitForChild("CheckPlacementValid")
 local ObjectsFolder = ServerScriptService:WaitForChild("Objects")
 
 local GameManager = {}
@@ -32,15 +33,6 @@ function GameManager.new(player)
 	return self
 end
 
-function GameManager:setupRemoteEventHandling()
-	PlaceObjectRequest.OnServerEvent:Connect(function(player, objectName, x, y)
-		print("Place at (" .. x .. ", " .. y .. ")")
-		local success = self:placeObject(player, objectName, x, y)
-		print("Success: " .. tostring(success))
-		PlaceObjectRequest:FireClient(player, success, x, y)
-	end)
-end
-
 function GameManager:placeObject(player, objectName, x, y)
 	local objectClass = OBJECTS[objectName]
 	if not objectClass then
@@ -54,6 +46,30 @@ function GameManager:placeObject(player, objectName, x, y)
 	end
 
 	return false
+end
+
+function GameManager:checkPlacementValid(objectName, x, y)
+	local objectClass = OBJECTS[objectName]
+	if not objectClass then
+		error("Request refused: Invalid object name")
+		return false
+	end
+	
+	local width, height = objectClass.width, objectClass.height
+	return self.grid:canPlaceObjectWithoutInstance(width, height, x, y)
+end
+
+function GameManager:setupRemoteEventHandling()
+	PlaceObjectRequest.OnServerEvent:Connect(function(player, objectName, x, y)
+		--print("Place at (" .. x .. ", " .. y .. ")")
+		local success = self:placeObject(player, objectName, x, y)
+		--print("Success: " .. tostring(success))
+		PlaceObjectRequest:FireClient(player, success, x, y)
+	end)
+	
+	CheckPlacementValid.OnServerInvoke = function(player, objectName, x, y)
+		return self:checkPlacementValid(objectName, x, y)
+	end
 end
 
 return GameManager
